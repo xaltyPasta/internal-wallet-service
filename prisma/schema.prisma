@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["wallet"]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  wallets   Wallet[]
+
+  @@schema("wallet")
+}
+
+model Asset {
+  id            String        @id @default(uuid())
+  name          String
+  symbol        String
+  createdAt     DateTime      @default(now())
+  ledgerEntries LedgerEntry[]
+  wallets       Wallet[]
+
+  @@schema("wallet")
+}
+
+model Wallet {
+  id        String        @id @default(uuid())
+  userId    String?
+  assetId   String
+  createdAt DateTime      @default(now())
+  entries   LedgerEntry[]
+  asset     Asset         @relation(fields: [assetId], references: [id])
+  user      User?         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, assetId])
+  @@schema("wallet")
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  referenceId   String          @unique
+  type          TransactionType
+  createdAt     DateTime        @default(now())
+  status          TransactionStatus @default(PENDING)
+  ledgerEntries LedgerEntry[]
+
+  @@schema("wallet")
+}
+
+
+
+model LedgerEntry {
+  id            String      @id @default(uuid())
+  walletId      String
+  assetId       String
+  transactionId String
+  amount        Decimal
+  createdAt     DateTime    @default(now())
+  asset         Asset       @relation(fields: [assetId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  wallet        Wallet      @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+  @@schema("wallet")
+}
+
+enum TransactionType {
+  TOPUP
+  BONUS
+  SPEND
+
+  @@schema("wallet")
+}
+
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+
+  @@schema("wallet")
+}
