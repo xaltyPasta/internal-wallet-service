@@ -22,7 +22,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/wallet_db?schema=wallet
       PORT: 3000
